@@ -20,6 +20,7 @@
         .search-wrapper { position: relative; }
         .search-input { border-radius: 20px; border: 1px solid #ccc; padding: 8px 35px 8px 15px; width: 100%; }
         .btn-clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #adb5bd; cursor: pointer; font-size: 1.1rem; display: none; z-index: 10; }
+        .btn-clear-search:active { color: #495057; }
         .cat-header { background-color: #ffc107; color: #000; font-weight: 800; padding: 8px 15px; margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #e0a800; }
         .product-row { background: white; border-bottom: 1px solid #eee; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
         .p-info { flex: 1; padding-right: 10px; overflow: hidden; }
@@ -46,6 +47,7 @@
         .btn-unit-select:hover { background-color: #f8f9fa; }
         .btn-unit-select.piece { border-color: #212529; color: #212529; }
         .btn-unit-select.kg { border-color: #d63384; color: #d63384; }
+        .btn-unit-select i { display: block; font-size: 1.5rem; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -139,8 +141,17 @@
     function init() {
         productMap = {}; 
         fullCatalog.forEach(c=>{c.items.forEach(i=>{const m=i.match(/^(.*)\s*\(([A-Za-z0-9]+)\)$/);if(m)productMap[m[2]]={fullName:i,name:m[1],code:m[2]}})});
-        renderFrequent(); renderAll();
+        loadCart(); renderFrequent(); renderAll();
         cartModal=new bootstrap.Modal(document.getElementById('cartModal')); unitModal=new bootstrap.Modal(document.getElementById('unitSelectionModal'));
+    }
+    function loadCart() {
+        const c=localStorage.getItem('orderCart_'+customerCode), u=localStorage.getItem('orderUnits_'+customerCode);
+        if(c)try{cart=JSON.parse(c)}catch(e){} if(u)try{cartUnits=JSON.parse(u)}catch(e){}
+        calcTotal();
+    }
+    function saveCart() {
+        localStorage.setItem('orderCart_'+customerCode, JSON.stringify(cart));
+        localStorage.setItem('orderUnits_'+customerCode, JSON.stringify(cartUnits));
     }
     function switchTab(t){document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-link').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');event.target.classList.add('active');if(t==='all'){clearSearch();document.getElementById('searchBar').style.display='block';window.scrollTo(0,0)}else{document.getElementById('searchBar').style.display='none'}}
     function renderFrequent(){const c=document.getElementById('tab-frequent');let h='';frequentCodes.forEach(code=>{const p=productMap[code];h+=p?createProductRow(p.fullName):createProductRow(code+' (未知)')});c.innerHTML=h}
@@ -178,9 +189,9 @@
             const r=i.closest('.product-row');
             if(r&&!r.classList.contains('modal-row')){q>0?r.classList.add('selected'):r.classList.remove('selected')}
         });
-        calcTotal(); if(document.getElementById('cartModal').classList.contains('show'))renderCartModalItems();
+        calcTotal(); saveCart(); if(document.getElementById('cartModal').classList.contains('show'))renderCartModalItems();
     }
-    function clearCart(){if(Object.keys(cart).length===0)return;if(confirm("確定要清空所有已選貨品嗎？")){cart={};cartUnits={};renderFrequent();renderAll();calcTotal();renderCartModalItems()}}
+    function clearCart(){if(Object.keys(cart).length===0)return;if(confirm("確定要清空所有已選貨品嗎？")){cart={};cartUnits={};localStorage.removeItem('orderCart_'+customerCode);localStorage.removeItem('orderUnits_'+customerCode);renderFrequent();renderAll();calcTotal();renderCartModalItems()}}
     function calcTotal(){
         const count=Object.keys(cart).length; document.getElementById('totalQty').innerText=count;
         const b=document.getElementById('viewCartBtn');
