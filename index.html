@@ -320,25 +320,40 @@
     }
     
     // V8.3 Dual Mode Send
+    // ✅ 老客戶專用修正版 (修復按鈕失效 + 顯示單位)
     function sendWhatsApp(mode){
         if(Object.keys(cart).length===0){alert("請先選擇產品！");return}
         
         const dateStr = getDeliveryDate();
         let msg=`${customerCode} ${customerName}\n日期：${dateStr}\n訂貨單：\n\n`;
-        const fmt=c=>{const p=productMap[c];const n=p?p.name:c;let q=cart[c].toString();if(cartUnits[c]==='kg')q+='K';return ` ${q.padEnd(5,' ')} ${n} (${c})\n`};
         
-        // --- V9.0 排序升級 (A-Z) ---
-        let codes = Object.keys(cart).sort(); // 這裡執行排序
+        // 這裡保留了您想要的「隻/K」顯示邏輯
+        const fmt=c=>{
+            const p=productMap[c];
+            const n=p?p.name:c;
+            let q=cart[c].toString();
+            
+            if(cartUnits[c]==='kg') {
+                q += 'K';
+            } else if (cartUnits[c]==='piece') {
+                q += '隻';
+            }
+            
+            return ` ${q.padEnd(6,' ')} ${n} (${c})\n`
+        };
+        
+        // A-Z 排序
+        let codes = Object.keys(cart).sort(); 
         
         let hasNewItems = false;
-        for(let c of codes){ // 這裡改用排序後的 codes
+        for(let c of codes){
+            // 這裡是老客戶的邏輯：檢查是否在常用清單，如果不在，就加入 "learned"
             if(!frequentCodes.includes(c) && !learnedFrequent.includes(c)){
                 learnedFrequent.push(c);
                 hasNewItems = true;
             }
             msg+=fmt(c); 
         }
-        // -------------------------
         
         if(hasNewItems){
             localStorage.setItem(storageKey + '_learned', JSON.stringify(learnedFrequent));
@@ -362,4 +377,5 @@
 </script>
 </body>
 </html>
+
 
