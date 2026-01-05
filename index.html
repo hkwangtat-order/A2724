@@ -185,16 +185,20 @@
         const hour = now.getHours();
         let targetDate = new Date(now);
         
+        // 1. 截單邏輯：如果過了 11:00，就算明天
         if (hour >= 11) {
             targetDate.setDate(targetDate.getDate() + 1);
         }
-        
+
+        // 2. 【新增】避開週日邏輯：如果算出來是週日 (0)，就自動再加一天變成週一
+        if (targetDate.getDay() === 0) {
+            targetDate.setDate(targetDate.getDate() + 1);
+        }
+
         const y = targetDate.getFullYear();
         const m = String(targetDate.getMonth() + 1).padStart(2, '0');
         const d = String(targetDate.getDate()).padStart(2, '0');
-        const weekdays = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
-        const w = weekdays[targetDate.getDay()];
-        
+        const w = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"][targetDate.getDay()];
         return `${y}-${m}-${d} (${w})`;
     }
 
@@ -377,5 +381,6 @@
 </script>
 </body>
 </html>
+
 
 
